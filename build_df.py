@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 from datetime import datetime
+import streamlit as st
 
 
 def build_country_data(country):
@@ -18,8 +19,9 @@ def build_country_data(country):
 		res.append(target_entry)
 	return res
 
+@st.cache
 def build_covid19_data():
-	request_str = 'https://corona.lmao.ninja/v2/historical?lastdays=3'
+	request_str = 'https://corona.lmao.ninja/v2/historical?lastdays=all'
 	response = requests.get(request_str)
 	json_data = response.json() if response and response.status_code == 200 else None
 
@@ -42,4 +44,17 @@ def build_covid19_data():
 
 
 df = build_covid19_data()
-print(df.shape)
+st.title("COVID-19 Visualization")
+countries_list = list(set([i.split('_')[0] for i in df.columns]))
+countries_list.sort()
+select = st.sidebar.selectbox('Country',countries_list)
+st.write(select)
+df_n = df[[select+'_cases',select+'_recovered',select+'_deaths']]
+df_n['active'] = df_n[select+'_cases']-df_n[select+'_recovered']-df_n[select+'_deaths']
+df_n['daily'] = df[select+'_cases'].diff()
+df_n['death'] = df[select+'_deaths'].diff()
+st.dataframe(df_n)
+
+
+option = st.multiselect('What you want to be plot?',[select+'_cases',select+'_recovered',select+'_deaths','daily','death','active'])
+st.line_chart(df_n[option])
