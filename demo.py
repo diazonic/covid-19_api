@@ -15,7 +15,6 @@ def build_country_data(country):
 		res.append(target_entry)
 	return res
 
-@st.cache
 def build_covid19_data():
 	request_str = 'https://corona.lmao.ninja/v2/historical?lastdays=all'
 	response = requests.get(request_str)
